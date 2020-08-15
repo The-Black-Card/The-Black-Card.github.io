@@ -1,315 +1,171 @@
 /*
-	Hielo by TEMPLATED
-	templated.co @templatedco
-	Released for free under the Creative Commons Attribution 3.0 license (templated.co/license)
+	Eventually by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
-var settings = {
+(function() {
 
-	banner: {
+	"use strict";
 
-		// Indicators (= the clickable dots at the bottom).
-			indicators: true,
+	var	$body = document.querySelector('body');
 
-		// Transition speed (in ms)
-		// For timing purposes only. It *must* match the transition speed of "#banner > article".
-			speed: 1500,
+	// Methods/polyfills.
 
-		// Transition delay (in ms)
-			delay: 5000,
+		// classList | (c) @remy | github.com/remy/polyfills | rem.mit-license.org
+			!function(){function t(t){this.el=t;for(var n=t.className.replace(/^\s+|\s+$/g,"").split(/\s+/),i=0;i<n.length;i++)e.call(this,n[i])}function n(t,n,i){Object.defineProperty?Object.defineProperty(t,n,{get:i}):t.__defineGetter__(n,i)}if(!("undefined"==typeof window.Element||"classList"in document.documentElement)){var i=Array.prototype,e=i.push,s=i.splice,o=i.join;t.prototype={add:function(t){this.contains(t)||(e.call(this,t),this.el.className=this.toString())},contains:function(t){return-1!=this.el.className.indexOf(t)},item:function(t){return this[t]||null},remove:function(t){if(this.contains(t)){for(var n=0;n<this.length&&this[n]!=t;n++);s.call(this,n,1),this.el.className=this.toString()}},toString:function(){return o.call(this," ")},toggle:function(t){return this.contains(t)?this.remove(t):this.add(t),this.contains(t)}},window.DOMTokenList=t,n(Element.prototype,"classList",function(){return new t(this)})}}();
 
-		// Parallax intensity (between 0 and 1; higher = more intense, lower = less intense; 0 = off)
-			parallax: 0.25
+		// canUse
+			window.canUse=function(p){if(!window._canUse)window._canUse=document.createElement("div");var e=window._canUse.style,up=p.charAt(0).toUpperCase()+p.slice(1);return p in e||"Moz"+up in e||"Webkit"+up in e||"O"+up in e||"ms"+up in e};
 
-	}
+		// window.addEventListener
+			(function(){if("addEventListener"in window)return;window.addEventListener=function(type,f){window.attachEvent("on"+type,f)}})();
 
-};
-
-(function($) {
-
-	skel.breakpoints({
-		xlarge:	'(max-width: 1680px)',
-		large:	'(max-width: 1280px)',
-		medium:	'(max-width: 980px)',
-		small:	'(max-width: 736px)',
-		xsmall:	'(max-width: 480px)'
-	});
-
-	/**
-	 * Applies parallax scrolling to an element's background image.
-	 * @return {jQuery} jQuery object.
-	 */
-	$.fn._parallax = (skel.vars.browser == 'ie' || skel.vars.mobile) ? function() { return $(this) } : function(intensity) {
-
-		var	$window = $(window),
-			$this = $(this);
-
-		if (this.length == 0 || intensity === 0)
-			return $this;
-
-		if (this.length > 1) {
-
-			for (var i=0; i < this.length; i++)
-				$(this[i])._parallax(intensity);
-
-			return $this;
-
-		}
-
-		if (!intensity)
-			intensity = 0.25;
-
-		$this.each(function() {
-
-			var $t = $(this),
-				on, off;
-
-			on = function() {
-
-				$t.css('background-position', 'center 100%, center 100%, center 0px');
-
-				$window
-					.on('scroll._parallax', function() {
-
-						var pos = parseInt($window.scrollTop()) - parseInt($t.position().top);
-
-						$t.css('background-position', 'center ' + (pos * (-1 * intensity)) + 'px');
-
-					});
-
-			};
-
-			off = function() {
-
-				$t
-					.css('background-position', '');
-
-				$window
-					.off('scroll._parallax');
-
-			};
-
-			skel.on('change', function() {
-
-				if (skel.breakpoint('medium').active)
-					(off)();
-				else
-					(on)();
-
-			});
-
+	// Play initial animations on page load.
+		window.addEventListener('load', function() {
+			window.setTimeout(function() {
+				$body.classList.remove('is-preload');
+			}, 100);
 		});
 
-		$window
-			.off('load._parallax resize._parallax')
-			.on('load._parallax resize._parallax', function() {
-				$window.trigger('scroll');
-			});
+	// Slideshow Background.
+		(function() {
 
-		return $(this);
+			// Settings.
+				var settings = {
 
-	};
+					// Images (in the format of 'url': 'alignment').
+						images: {
+							'images/bg01.png': 'center',
+							'images/bg02.png': 'center',
+							'images/bg03.png': 'center'
+						},
 
-	/**
-	 * Custom banner slider for Slate.
-	 * @return {jQuery} jQuery object.
-	 */
-	$.fn._slider = function(options) {
+					// Delay.
+						delay: 6000
 
-		var	$window = $(window),
-			$this = $(this);
+				};
 
-		if (this.length == 0)
-			return $this;
+			// Vars.
+				var	pos = 0, lastPos = 0,
+					$wrapper, $bgs = [], $bg,
+					k, v;
 
-		if (this.length > 1) {
+			// Create BG wrapper, BGs.
+				$wrapper = document.createElement('div');
+					$wrapper.id = 'bg';
+					$body.appendChild($wrapper);
 
-			for (var i=0; i < this.length; i++)
-				$(this[i])._slider(options);
+				for (k in settings.images) {
 
-			return $this;
+					// Create BG.
+						$bg = document.createElement('div');
+							$bg.style.backgroundImage = 'url("' + k + '")';
+							$bg.style.backgroundPosition = settings.images[k];
+							$wrapper.appendChild($bg);
 
-		}
+					// Add it to array.
+						$bgs.push($bg);
 
-		// Vars.
-			var	current = 0, pos = 0, lastPos = 0,
-				slides = [], indicators = [],
-				$indicators,
-				$slides = $this.children('article'),
-				intervalId,
-				isLocked = false,
-				i = 0;
+				}
 
-		// Turn off indicators if we only have one slide.
-			if ($slides.length == 1)
-				options.indicators = false;
+			// Main loop.
+				$bgs[pos].classList.add('visible');
+				$bgs[pos].classList.add('top');
 
-		// Functions.
-			$this._switchTo = function(x, stop) {
+				// Bail if we only have a single BG or the client doesn't support transitions.
+					if ($bgs.length == 1
+					||	!canUse('transition'))
+						return;
 
-				if (isLocked || pos == x)
+				window.setInterval(function() {
+
+					lastPos = pos;
+					pos++;
+
+					// Wrap to beginning if necessary.
+						if (pos >= $bgs.length)
+							pos = 0;
+
+					// Swap top images.
+						$bgs[lastPos].classList.remove('top');
+						$bgs[pos].classList.add('visible');
+						$bgs[pos].classList.add('top');
+
+					// Hide last image after a short delay.
+						window.setTimeout(function() {
+							$bgs[lastPos].classList.remove('visible');
+						}, settings.delay / 2);
+
+				}, settings.delay);
+
+		})();
+
+	// Signup Form.
+		(function() {
+
+			// Vars.
+				var $form = document.querySelectorAll('#signup-form')[0],
+					$submit = document.querySelectorAll('#signup-form input[type="submit"]')[0],
+					$message;
+
+			// Bail if addEventListener isn't supported.
+				if (!('addEventListener' in $form))
 					return;
 
-				isLocked = true;
+			// Message.
+				$message = document.createElement('span');
+					$message.classList.add('message');
+					$form.appendChild($message);
 
-				if (stop)
-					window.clearInterval(intervalId);
+				$message._show = function(type, text) {
 
-				// Update positions.
-					lastPos = pos;
-					pos = x;
+					$message.innerHTML = text;
+					$message.classList.add(type);
+					$message.classList.add('visible');
 
-				// Hide last slide.
-					slides[lastPos].removeClass('top');
-
-					if (options.indicators)
-						indicators[lastPos].removeClass('visible');
-
-				// Show new slide.
-					slides[pos].addClass('visible').addClass('top');
-
-					if (options.indicators)
-						indicators[pos].addClass('visible');
-
-				// Finish hiding last slide after a short delay.
 					window.setTimeout(function() {
+						$message._hide();
+					}, 3000);
 
-						slides[lastPos].addClass('instant').removeClass('visible');
+				};
 
+				$message._hide = function() {
+					$message.classList.remove('visible');
+				};
+
+			// Events.
+			// Note: If you're *not* using AJAX, get rid of this event listener.
+				$form.addEventListener('submit', function(event) {
+
+					event.stopPropagation();
+					event.preventDefault();
+
+					// Hide message.
+						$message._hide();
+
+					// Disable submit.
+						$submit.disabled = true;
+
+					// Process form.
+					// Note: Doesn't actually do anything yet (other than report back with a "thank you"),
+					// but there's enough here to piece together a working AJAX submission call that does.
 						window.setTimeout(function() {
 
-							slides[lastPos].removeClass('instant');
-							isLocked = false;
+							// Reset form.
+								$form.reset();
 
-						}, 100);
+							// Enable submit.
+								$submit.disabled = false;
 
-					}, options.speed);
+							// Show message.
+								$message._show('success', 'Thank you!');
+								//$message._show('failure', 'Something went wrong. Please try again.');
 
-			};
+						}, 750);
 
-		// Indicators.
-			if (options.indicators)
-				$indicators = $('<ul class="indicators"></ul>').appendTo($this);
-
-		// Slides.
-			$slides
-				.each(function() {
-
-					var $slide = $(this),
-						$img = $slide.find('img');
-
-					// Slide.
-						$slide
-							.css('background-image', 'url("' + $img.attr('src') + '")')
-							.css('background-position', ($slide.data('position') ? $slide.data('position') : 'center'));
-
-					// Add to slides.
-						slides.push($slide);
-
-					// Indicators.
-						if (options.indicators) {
-
-							var $indicator_li = $('<li>' + i + '</li>').appendTo($indicators);
-
-							// Indicator.
-								$indicator_li
-									.data('index', i)
-									.on('click', function() {
-										$this._switchTo($(this).data('index'), true);
-									});
-
-							// Add to indicators.
-								indicators.push($indicator_li);
-
-						}
-
-					i++;
-
-				})
-				._parallax(options.parallax);
-
-		// Initial slide.
-			slides[pos].addClass('visible').addClass('top');
-
-			if (options.indicators)
-				indicators[pos].addClass('visible');
-
-		// Bail if we only have a single slide.
-			if (slides.length == 1)
-				return;
-
-		// Main loop.
-			intervalId = window.setInterval(function() {
-
-				current++;
-
-				if (current >= slides.length)
-					current = 0;
-
-				$this._switchTo(current);
-
-			}, options.delay);
-
-	};
-
-	$(function() {
-
-		var	$window 	= $(window),
-			$body 		= $('body'),
-			$header 	= $('#header'),
-			$banner 	= $('.banner');
-
-		// Disable animations/transitions until the page has loaded.
-			$body.addClass('is-loading');
-
-			$window.on('load', function() {
-				window.setTimeout(function() {
-					$body.removeClass('is-loading');
-				}, 100);
-			});
-
-		// Prioritize "important" elements on medium.
-			skel.on('+medium -medium', function() {
-				$.prioritize(
-					'.important\\28 medium\\29',
-					skel.breakpoint('medium').active
-				);
-			});
-
-		// Banner.
-			$banner._slider(settings.banner);
-
-		// Menu.
-			$('#menu')
-				.append('<a href="#menu" class="close"></a>')
-				.appendTo($body)
-				.panel({
-					delay: 500,
-					hideOnClick: true,
-					hideOnSwipe: true,
-					resetScroll: true,
-					resetForms: true,
-					side: 'right'
 				});
 
-		// Header.
-			if (skel.vars.IEVersion < 9)
-				$header.removeClass('alt');
+		})();
 
-			if ($banner.length > 0
-			&&	$header.hasClass('alt')) {
-
-				$window.on('resize', function() { $window.trigger('scroll'); });
-
-				$banner.scrollex({
-					bottom:		$header.outerHeight(),
-					terminate:	function() { $header.removeClass('alt'); },
-					enter:		function() { $header.addClass('alt'); },
-					leave:		function() { $header.removeClass('alt'); $header.addClass('reveal'); }
-				});
-
-			}
-
-	});
-
-})(jQuery);
+})();
